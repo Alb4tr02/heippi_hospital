@@ -31,18 +31,52 @@ def home():
 def new_pacient():
     return render_template("new_pacient.html")
 
-@app.route("/new-pacient/update", methods=['PUT'])
+@app.route("/pacient/update", methods=['PUT'])
 def pacient_update():
-    user = request.form
+    new_pacient = request.form
     if (auth.current_user is None):
         return jsonify({'message': 'not logged'})
     if (auth.usr_type != "pacient"):
         return jsonify({'message': 'you must be logged as pacient'})
-    valid, new_pacient = validate_pacient(new_pacient)
+    valid, new_pacient = validate_pacient(new_pacient, "update")
+    if (not valid):
+        return jsonify({'message': new_pacient + " not valid"})
+    else:
+        db.child("pacients").child(auth.usr_cc).update(new_pacient)
+        return jsonify("updated data")
+
+@app.route("/hospital/update", methods=['PUT'])
+def hospital_update():
+    new_hospital = request.form
+    if (auth.current_user is None):
+        return jsonify({'message': 'not logged'})
+    if (auth.usr_type != "hospital"):
+        return jsonify({'message': 'you must be logged as hospital'})
+    valid, new_hospital = validate_hospital(new_hospital, "update")
+    if (not valid):
+        return jsonify({'message': new_hospital + " not valid"})
+    else:
+        db.child("hospitals").child(auth.usr_cc).update(new_hospital)
+        return jsonify("updated data")
+
+@app.route("/doctor/update", methods=['PUT'])
+def doctor_update():
+    new_doctor = request.form
+    if (auth.current_user is None):
+        return jsonify({'message': 'not logged'})
+    if (auth.usr_type != "doctor"):
+        return jsonify({'message': 'you must be logged as doctor'})
+    valid, new_hospital = validate_hospital(new_doctor, "update")
+    if (not valid):
+        return jsonify({'message': new_doctor + " not valid"})
+    else:
+        db.child("doctors").child(auth.usr_cc).update(new_doctor)
+        return jsonify("updated data")
     
     
-@app.route("/loggin", methods=['POST'])
-def loggin():
+    
+@app.route("/login", methods=['POST'])
+def login():
     user = request.form
     auth.current_user, auth.usr_email, auth.usr_type, auth.usr_cc = None, None, None, None
     user_email, user_type, user_cc = get_type_user(db, user)
@@ -53,19 +87,18 @@ def loggin():
     except requests.exceptions.HTTPError as e:
             return jsonify(get_http_error(e))
     except TypeError as e:
-            print(e)
             return jsonify({'message': "TyperError"})
     except Exception as e:
             return jsonify({'message': "Error"})
     verified = auth.get_account_info(user['idToken'])['users'][0]['emailVerified']
     if (not verified):
-        auth.current_user = None
+        auth.current_user, auth.usr_email, auth.usr_type, auth.usr_cc = None, None, None, None
         return jsonify({'message': 'verify your email'})
     else:
         auth.usr_email, auth.usr_type, auth.usr_cc = user_email, user_type, user_cc
         updated = auth.get_account_info(user['idToken'])['users'][0]['passwordUpdatedAt']
         created = auth.get_account_info(user['idToken'])['users'][0]['createdAt']
-        if auth.usr_type == "doctor" and updated == created:
+        if auth.usr_type == "doctor" and str(updated) == str(created):
             auth.send_password_reset_email(auth.usr_email)
             auth.current_user, auth.usr_email, auth.usr_type, auth.usr_cc = None, None, None, None
             return jsonify({'message': 'reset your password'})
@@ -74,13 +107,13 @@ def loggin():
 
 @app.route("/new-pacient/add", methods=['POST'])
 def add_new_pacient():
-    new_pacient = request.form
-    valid, new_pacient = validate_pacient(new_pacient)
+    data = request.form
+    valid, new_pacient = validate_pacient(data)
     if (not valid):
         return jsonify({'message': new_pacient + " not valid"})
     try:
         user = auth.create_user_with_email_and_password(new_pacient['usr_email'], 
-                                                        new_pacient['usr_password'])
+                                                        data['usr_password'])
         auth.send_email_verification(user['idToken'])
         db.child("pacients").child(new_pacient['usr_cc']).set(new_pacient)
         return jsonify("pacient " + new_pacient['usr_email'] + " created" )
@@ -89,12 +122,13 @@ def add_new_pacient():
     except TypeError as e:
         return jsonify({'message': "TyperError"})
     except Exception as e:
+        print(e)
         return jsonify({'message': "Error"})
     
 @app.route("/new-hospital/add", methods=['POST'])
 def add_new_hospital():
-    new_hospital = request.form
-    valid, new_hospital = validate_hospital(new_hospital)
+    data = request.form
+    valid, new_hospital = validate_hospital(data)
     if (not valid):
         return jsonify({'message': new_hospital + " not valid"})
     try:
@@ -113,8 +147,6 @@ def add_new_hospital():
 
 @app.route("/new-doctor/add", methods=['POST'])
 def add_new_doctor():
-    print("***********************************")
-    print(auth.usr_type)
     if auth.usr_type != "hospital":
         return jsonify({'message': 'you must be logged as hospital'})
     new_doctor = request.form
@@ -133,6 +165,20 @@ def add_new_doctor():
         return jsonify({'message': "TyperError"})
     except Exception as e:
         return jsonify({'message': "Error"})
+
+@app.route("/account/reset-password", methods=['POST'])
+def reset_password():
+    auth.current_user, auth.usr_email, auth.usr_type, auth.usr_cc = None, None, None, None
+    data = request.form
+    user_email, user_type, user_cc = get_type_user(db, data)
+    if (user_email is None):
+        return jsonify({'message': 'no account found'})
+    try:
+        auth.send_password_reset_email(user_email)
+    except Exception:
+        return jsonify({'message': 'error'})
+    return jsonify({'message': 'mail sended'})
+    
 
 if __name__ == "__main__":
     app.run(debug = True, host = "0.0.0.0", port = 3000)

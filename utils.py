@@ -28,29 +28,43 @@ def validate_pacient(data, mode=""):
                 return (False, value)
         return (True, new_data)
 
-def validate_doctor(data):
+def validate_doctor(data, mode=""):
     contents = ["doc_cc", "doc_name", "doc_email", "doc_phone", "doc_password"]
     mandatory = ["doc_cc", "doc_email", "doc_phone", "doc_password"]
-    new_data = {"new_doc": True}
-    keys = list(data.keys())
-    for value in contents:
-        if (value in keys and len(data[value]) > 0):
-            new_data[value] = data[value]
-        elif value in mandatory:
-            return (False, value)
-    return (True, new_data)
-
-def validate_hospital(data):
-    contents = ["hosp_cc", "hosp_services", "hosp_name", "hosp_addr", "hosp_email", "usr_phone", "hosp_password"]
-    mandatory = ["hosp_cc", "hosp_email", "hosp_phone", "hosp_password"]
+    optional = ["doc_name"]
     new_data = {}
     keys = list(data.keys())
-    for value in contents:
-        if (value in keys and len(data[value]) > 0):
-            new_data[value] = data[value]
-        elif value in mandatory:
-            return (False, value)
-    return (True, new_data)
+    if mode == "update":
+        for value in optional:
+            if (value in keys):
+                new_data[value] = data[value]
+        return (True, new_data)
+    else:
+        for value in contents:
+            if (value in keys and len(data[value]) > 0):
+                new_data[value] = data[value]
+            elif value in mandatory:
+                return (False, value)
+        return (True, new_data)
+
+def validate_hospital(data, mode=""):
+    contents = ["hosp_cc", "hosp_services", "hosp_name", "hosp_addr", "hosp_email", "usr_phone", "hosp_password"]
+    mandatory = ["hosp_cc", "hosp_email", "hosp_phone"]
+    optional = ["hosp_services", "hosp_name", "hosp_addr"]
+    new_data = {}
+    keys = list(data.keys())
+    if mode == "update":
+        for value in optional:
+            if (value in keys):
+                new_data[value] = data[value]
+        return (True, new_data)
+    else:
+        for value in contents:
+            if (value in keys and len(data[value]) > 0):
+                new_data[value] = data[value]
+            elif value in mandatory:
+                return (False, value)
+        return (True, new_data)
 
 def get_type_user(db, user):
     try:

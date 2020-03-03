@@ -1,0 +1,62 @@
+Curl tests
+
+// Signin pacients
+route: "/new-pacient/add"
+methods allowed: POST
+parameters: usr_cc, usr_email, usr_phone, usr_password, [usr_name], [usr_addr], [usr_birth_date]
+Curl Example:
+curl -d "usr_cc=00001&usr_email=jodmunozol@unal.edu.co&usr_phone=1234&usr_password=123456" -X POST http://localhost:3000/new-pacient/add
+
+// Signin hospitals
+route: "/new-hospital/add"
+methods allowed: POST
+parameters: hosp_cc, hosp_email, hosp_phone, [hosp_services], [hosp_name], [hosp_addr]
+Curl Example:
+curl -d "hosp_cc=00002&hosp_email=834@holbertonschool.com&hosp_phone=1234&hosp_password=123456" -X POST http://localhost:3000/new-hospital/add
+
+// Loggin
+route: "/login"
+methods allowed: POST
+parameters: cc, password
+Notes: In order to access you must verify your email address, and then if you are trying to loggin as doctor you have to reset your default password
+Curl Example:
+curl -d "cc=00002&password=123456" -X POST http://localhost:3000/loggin
+
+// Create new doctors
+route: "/new-doctor/add"
+methods allowed: POST
+parameters: doc_cc, doc_email, doc_phone, doc_password, [doc_name]
+Notes: In order to create a new doctor user you must be logged as hospital user
+Curl Example:
+curl -d "doc_cc=00003&doc_password=123456&doc_email=942@holbertonschool.com&doc_phone=1234" -X POST http://localhost:3000/new-doctor/add
+
+// Update pacient data
+route: "/pacient/update"
+methods allowed: PUT
+parameters: [usr_date_birth], [usr_name], [usr_addr]
+Notes: In order to update the data you must be logged as pacient user
+Curl Example:
+curl -d "usr_name=tonytony" -X PUT http://localhost:3000/pacient/update
+
+// Update Hospital data
+route: "/hospital/update"
+methods allowed: PUT
+parameters: [hosp_services], [hosp_name], [hosp_addr]
+Notes: In order to update the data you must be logged as hospital user
+Curl Example:
+curl -d "hosp_services=surgery, rehabilitation&hosp_name=Arkham Asylum" -X PUT http://localhost:3000/hospital/update
+
+// Update Doctor data
+route: "/doctor/update"
+methods allowed: PUT
+parameters: [doc_name]
+Notes: In order to update the data you must be logged as doctor user
+Curl Example:
+curl -d "doc_name=Bruce Wayne" -X PUT http://localhost:3000/doctor/update
+
+// Reset password
+route: "/account/reset-password"
+methods allowed: POST
+parameters: cc
+Curl Example:
+curl -d "cc=00001" -X POST http://localhost:3000/account/reset-password
