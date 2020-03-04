@@ -129,10 +129,10 @@ curl http://localhost:3000/medical-observations
 
 **9** Descargar archivo con todas las observaciones de un Paciente registradas en el sistema.Condiciones iguales al punto 7
 
-**Get medical observations pdf format**
-route: "/medical-observations/<cc>"
-methods allowed: GET
-parameters: cc represents the id of the pacient
-Notes: In order to get a pdf file filled with the patient's medical history, you must be logged as doctor user
-Curl Example:
-curl -o file_name.pdf http://localhost:3000/medical-observations/00001 
+**Get medical observations pdf format** \\
+route: "/medical-observations/<cc>" \\
+methods allowed: GET \\
+parameters: cc represents the id of the pacient \\
+Notes: In order to get a pdf file filled with the patient's medical history, you must be logged as doctor user \\
+Curl Example: \\
+curl -o file_name.pdf http://localhost:3000/medical-observations/00001  \\
