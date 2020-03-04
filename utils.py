@@ -1,3 +1,4 @@
+from pdf import pdf
 
 def get_http_error(http_error):
     err_json = {}
@@ -101,50 +102,57 @@ def get_type_user(db, user):
     return None, None, None
 
 def get_pacient_obs(db, cc):
-    obs = db.child("pacients").child(cc).child("observations").get()
-    name = db.child("pacients").child(cc).get().val()['usr_name']
-    obs = obs.val().keys()
-    l_dict = []
-    for key in obs:
-        aux_dict = {}
-        aux = db.child("medical_observations").child(key).get().val()
-        doctor = db.child("doctors").child(aux['doc_cc']).get().val()
-        aux_dict['doctor'] = doctor['doc_name']
-        aux_dict['hospital'] = db.child("hospitals").child(doctor['hosp_cc']).get().val()['hosp_name']
-        aux_dict['especiality'] = aux['especiality']
-        aux_dict['details'] = aux['observations']
-        l_dict.append(aux_dict)
-    all_data = {'usr_name': name, 'data': l_dict} 
-    gen_pdf(all_data)
-    return all_data
-
-def gen_pdf(data):
-    return
+    try:
+        obs = db.child("pacients").child(cc).child("observations").get()
+        name = db.child("pacients").child(cc).get().val()['usr_name']
+        obs = obs.val().keys()
+        l_dict = []
+        for key in obs:
+            aux_dict = {}
+            aux = db.child("medical_observations").child(key).get().val()
+            doctor = db.child("doctors").child(aux['doc_cc']).get().val()
+            aux_dict['doctor'] = doctor['doc_name']
+            aux_dict['hospital'] = db.child("hospitals").child(doctor['hosp_cc']).get().val()['hosp_name']
+            aux_dict['especiality'] = aux['especiality']
+            aux_dict['details'] = aux['observations']
+            l_dict.append(aux_dict)
+        all_data = {'usr_name': name, 'data': l_dict} 
+        return all_data
+    except Exception:
+        return None
+    
 
 def get_doctor_obs(db, cc):
-    obs = db.child("doctors").child(cc).child("observations").get()
-    doc = db.child("doctors").child(cc).get().val()
-    obs = obs.val().keys()
-    l_dict = []
-    for key in obs:
-        aux_dict = {}
-        aux = db.child("medical_observations").child(key).get().val()
-        pacient = db.child("pacients").child(aux['usr_cc']).get().val()
-        aux_dict['pacient'] = pacient['usr_name']
-        aux_dict['hospital'] = db.child("hospitals").child(doc['hosp_cc']).get().val()['hosp_name']
-        aux_dict['especiality'] = aux['especiality']
-        aux_dict['details'] = aux['observations']
-        l_dict.append(aux_dict)
-    return {'doc_name': doc['doc_name'], 'data': l_dict}
+    try:
+        obs = db.child("doctors").child(cc).child("observations").get()
+        doc = db.child("doctors").child(cc).get().val()
+        obs = obs.val().keys()
+        l_dict = []
+        for key in obs:
+            aux_dict = {}
+            aux = db.child("medical_observations").child(key).get().val()
+            pacient = db.child("pacients").child(aux['usr_cc']).get().val()
+            aux_dict['pacient'] = pacient['usr_name']
+            aux_dict['hospital'] = db.child("hospitals").child(
+                doc['hosp_cc']).get().val()['hosp_name']
+            aux_dict['especiality'] = aux['especiality']
+            aux_dict['details'] = aux['observations']
+            l_dict.append(aux_dict)
+            return {'doc_name': doc['doc_name'], 'data': l_dict}
+    except Exception:
+        return None
 
 def get_hospital_obs(db, cc):
-    obs = db.child("hospitals").child(cc).child("doctors_cc").get()
-    hosp = db.child("hospitals").child(cc).get().val()
-    obs = obs.val().keys()
-    l_dict = []
-    for key in obs:
-        l_dict.append(get_doctor_obs(db, key))
-    return {'hosp_name': hosp['hosp_name'], 'data': l_dict}
+    try:
+        obs = db.child("hospitals").child(cc).child("doctors_cc").get()
+        hosp = db.child("hospitals").child(cc).get().val()
+        obs = obs.val().keys()
+        l_dict = []
+        for key in obs:
+            l_dict.append(get_doctor_obs(db, key))
+        return {'hosp_name': hosp['hosp_name'], 'data': l_dict}
+    except Exception:
+        return None
 
 def get_obs_data(db, user_type, cc):
     if user_type == "pacient":
@@ -154,3 +162,13 @@ def get_obs_data(db, user_type, cc):
     if user_type == "hospital":
         return get_hospital_obs(db, cc)
     return None
+
+def get_pdf_pacient(db, cc):
+    data = get_pacient_obs(db, cc)
+    print("**************")
+    print(cc)
+    print(data)
+    if data is None:
+        return None
+    route = pdf(data)
+    return route
