@@ -1,3 +1,4 @@
+
 def get_http_error(http_error):
     err_json = {}
     err = str(http_error)
@@ -113,7 +114,12 @@ def get_pacient_obs(db, cc):
         aux_dict['especiality'] = aux['especiality']
         aux_dict['details'] = aux['observations']
         l_dict.append(aux_dict)
-    return {'usr_name': name, 'data': l_dict}
+    all_data = {'usr_name': name, 'data': l_dict} 
+    gen_pdf(all_data)
+    return all_data
+
+def gen_pdf(data):
+    return
 
 def get_doctor_obs(db, cc):
     obs = db.child("doctors").child(cc).child("observations").get()

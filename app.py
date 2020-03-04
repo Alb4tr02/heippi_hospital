@@ -88,6 +88,8 @@ def login():
             return jsonify(get_http_error(e))
     except TypeError as e:
             return jsonify({'message': "TyperError"})
+    except requests.exceptions.ConnectionError:
+        return jsonify({'message': 'Conection failed'})
     except Exception as e:
             return jsonify({'message': "Error"})
     verified = auth.get_account_info(user['idToken'])['users'][0]['emailVerified']
