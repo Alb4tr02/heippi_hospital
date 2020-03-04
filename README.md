@@ -119,13 +119,13 @@ Usuario Paciente, solo puede consultar sus registros.
 Usuario Médico, puede consultar registros realizados por él mismo.  
 Usuario Hospital, puede consultar los registros realizados por sus Médicos.  
 
-**Get medical observations**
-route: "/medical-observations"
-methods allowed: GET
-parameters: none
-Notes: response sended in Json format
-Curl Example:
-curl http://localhost:3000/medical-observations
+**Get medical observations**       
+route: "/medical-observations"       
+methods allowed: GET        
+parameters: none        
+Notes: response sended in Json format      
+Curl Example:        
+curl http://localhost:3000/medical-observations      
 
 **9** Descargar archivo con todas las observaciones de un Paciente registradas en el sistema.Condiciones iguales al punto 7
 
