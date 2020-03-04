@@ -154,10 +154,13 @@ def add_new_doctor():
     if (not valid):
         return jsonify({'message': new_doctor + " not valid"})
     try:
+        hosp_cc = auth.usr_cc
         user = auth.create_user_with_email_and_password(new_doctor['doc_email'], 
                                                         new_doctor['doc_password'])
-        auth.send_email_verification(user['idToken'])
+        new_doctor['hosp_cc'] = hosp_cc
         db.child("doctors").child(new_doctor['doc_cc']).set(new_doctor)
+        db.child("hospitals").child(hosp_cc).child("doctors_cc").update({new_doctor['doc_cc']: new_doctor['doc_cc']})
+        auth.send_email_verification(user['idToken'])
         return jsonify("doctor " + new_doctor['doc_email'] + " created" )
     except requests.exceptions.HTTPError as e:
         return jsonify(get_http_error(e))
@@ -179,6 +182,34 @@ def reset_password():
         return jsonify({'message': 'error'})
     return jsonify({'message': 'mail sended'})
     
+@app.route("/medical-observations/add", methods=['POST'])
+def add_medical_observation():
+    data = request.form
+    if (auth.usr_type != "doctor"):
+        return jsonify({'message': 'you must be logged as doctor user'})
+    valid, new_obs = validate_obs(db, data)
+    if (not valid):
+        return jsonify({'message': 'data ' + new_obs + ' invalid'})
+    try:
+        new_obs['doc_cc'] = auth.usr_cc
+        key = db.generate_key()
+        db.child('medical_observations').child(key).set(new_obs)
+        db.child('doctors').child(new_obs['doc_cc']).child('observations').update({key: key})
+        db.child('pacients').child(new_obs['usr_cc']).child('observations').update({key: key})
+        db.child('pacients').child(new_obs['usr_cc']).update({'health': new_obs['health']})
+    except Exception as e:
+        print(e)
+        return jsonify({'message': 'error'})
+    return jsonify({'message': 'new observation created'})  
+
+@app.route("/medical-observations", methods=['GET'])
+def get_medical_observations():
+    if auth.usr_cc is None:
+        return jsonify({'message': 'you must be logged'})
+    data_obs = get_obs_data(db, auth.usr_type, auth.usr_cc)
+    if (data_obs is None):
+        return jsonify({'message': 'Error'})
+    return jsonify(data_obs)
 
 if __name__ == "__main__":
     app.run(debug = True, host = "0.0.0.0", port = 3000)

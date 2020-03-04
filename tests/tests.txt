@@ -60,3 +60,14 @@ methods allowed: POST
 parameters: cc
 Curl Example:
 curl -d "cc=00001" -X POST http://localhost:3000/account/reset-password
+
+// Create medical observations
+route: "/medical-observations"
+methods allowed: GET
+parameters: health, observations, especiality, usr_cc
+Notes: In order to create a new medical observation you must be logged as doctor user
+Curl Example:
+curl -d "health=bad&usr_cc=00001&observations=pacient have flu&especiality=homeopathy" -X POST http://localhost:3000/medical-observations/add
+
+// Get medical observations
+route:

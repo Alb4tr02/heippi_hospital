@@ -66,11 +66,25 @@ def validate_hospital(data, mode=""):
                 return (False, value)
         return (True, new_data)
 
+def validate_obs(db, data):
+    contents = ['health', 'observations', 'especiality', 'usr_cc']
+    keys = list(data.keys())
+    new_data = {}
+    for value in contents:
+        if (value in keys and len(data[value]) > 0):
+            new_data[value] = data[value]
+        else:
+            return (False, value)
+    pacient = db.child("pacients").child(new_data['usr_cc']).get()
+    if (pacient.val() is None):
+        return (False, 'usr_cc') 
+    return (True, new_data)
+
 def get_type_user(db, user):
     try:
         cc = user['cc']
     except KeyError:
-        return None, None
+        return None, None, None
     user_data = db.child("hospitals").child(cc).get()
     if (user_data.val() is not None):
         email = user_data.val()['hosp_email']
@@ -84,3 +98,53 @@ def get_type_user(db, user):
         email = user_data.val()['doc_email']
         return email, "doctor", cc
     return None, None, None
+
+def get_pacient_obs(db, cc):
+    obs = db.child("pacients").child(cc).child("observations").get()
+    name = db.child("pacients").child(cc).get().val()['usr_name']
+    obs = obs.val().keys()
+    l_dict = []
+    for key in obs:
+        aux_dict = {}
+        aux = db.child("medical_observations").child(key).get().val()
+        doctor = db.child("doctors").child(aux['doc_cc']).get().val()
+        aux_dict['doctor'] = doctor['doc_name']
+        aux_dict['hospital'] = db.child("hospitals").child(doctor['hosp_cc']).get().val()['hosp_name']
+        aux_dict['especiality'] = aux['especiality']
+        aux_dict['details'] = aux['observations']
+        l_dict.append(aux_dict)
+    return {'usr_name': name, 'data': l_dict}
+
+def get_doctor_obs(db, cc):
+    obs = db.child("doctors").child(cc).child("observations").get()
+    doc = db.child("doctors").child(cc).get().val()
+    obs = obs.val().keys()
+    l_dict = []
+    for key in obs:
+        aux_dict = {}
+        aux = db.child("medical_observations").child(key).get().val()
+        pacient = db.child("pacients").child(aux['usr_cc']).get().val()
+        aux_dict['pacient'] = pacient['usr_name']
+        aux_dict['hospital'] = db.child("hospitals").child(doc['hosp_cc']).get().val()['hosp_name']
+        aux_dict['especiality'] = aux['especiality']
+        aux_dict['details'] = aux['observations']
+        l_dict.append(aux_dict)
+    return {'doc_name': doc['doc_name'], 'data': l_dict}
+
+def get_hospital_obs(db, cc):
+    obs = db.child("hospitals").child(cc).child("doctors_cc").get()
+    hosp = db.child("hospitals").child(cc).get().val()
+    obs = obs.val().keys()
+    l_dict = []
+    for key in obs:
+        l_dict.append(get_doctor_obs(db, key))
+    return {'hosp_name': hosp['hosp_name'], 'data': l_dict}
+
+def get_obs_data(db, user_type, cc):
+    if user_type == "pacient":
+        return get_pacient_obs(db, cc)
+    if user_type == "doctor":
+        return get_doctor_obs(db, cc)
+    if user_type == "hospital":
+        return get_hospital_obs(db, cc)
+    return None
